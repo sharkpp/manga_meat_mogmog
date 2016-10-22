@@ -1,0 +1,95 @@
+
+#ifndef HSPTVEXT_HSP_INCLUDED
+#define HSPTVEXT_HSP_INCLUDED
+
+#ifdef HSPTV_OFFLINE
+
+#module
+
+#define global HSPTV_RANK_MAX 30
+
+#define global HSPTV_LOCAL_FILE "hsptvdat.txt"
+
+#define global hsptv_send(%1, %2 = 0, %3 = "", %4 = 0) hsptv_send__ %1, %2, %3, %4
+#deffunc hsptv_send__ var result, int score, str comment, int options
+  hsptv_up score, comment, options
+  result = data_
+  return
+
+#deffunc hsptv_up int score, str comment, int options
+  notesel data_
+  if score >= 0 {
+    if options == 0 {
+      entries = notemax / 3
+      insert = entries * 3
+      repeat entries
+        i = cnt * 3
+        noteget s, i
+        if score > s {
+          insert = i
+          break
+        }
+      loop
+      noteadd "" + score, insert
+      noteadd name_, insert + 1
+      noteadd comment, insert + 2
+      if insert >= HSPTV_RANK_MAX {
+        repeat 3
+          notedel HSPTV_RANK_MAX * 3
+        loop
+      }
+    } else {
+      if options & 0x2000 {
+        n = ""
+      } else {
+        n = name_
+      }
+      if options & 0x1000 {
+        i = score * 3
+        noteadd "0", i, 1
+        noteadd n, i + 1, 1
+        noteadd comment, i + 2, 1
+      }
+    }
+
+  }
+  noteunsel
+  return
+
+#deffunc hsptv_getrank var score, var name, var comment, int rank
+  notesel data_
+  i = rank * 3
+  noteget score, i
+  score = 0 + score
+  noteget name, i + 1
+  noteget comment, i + 2
+  noteunsel
+  return
+
+#deffunc hsptv_name str name
+  name_ = name
+  return
+
+#deffunc hsptv_init
+  name_ = "guest"
+  notesel data_
+  exist HSPTV_LOCAL_FILE
+  if strsize > 0 {
+    noteload HSPTV_LOCAL_FILE
+  }
+  noteunsel
+  return
+
+#deffunc hsptv_save onexit
+  notesel data_
+  notesave HSPTV_LOCAL_FILE
+  noteunsel
+  return
+
+#global
+hsptv_init
+#else
+#include "hsptv.as"
+#endif
+
+#endif

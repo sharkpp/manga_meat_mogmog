@@ -1,0 +1,693 @@
+
+
+
+
+;=================================================
+; オブジェクトサイズ圧縮用サポートマクロ
+;=================================================
+
+; if 0 == (expr) :
+#define _ifn				on
+; max(a, b)
+#define ctype maxf(%1,%2)	limitf(%1,%2,2147483647)
+; v = 0
+#define let0(%1)			dim %1
+; v = 1 ※初回 or dimで初期化直後のみ有効
+#define let1(%1)			%1++
+; v = 0.0
+#define let0d(%1)			dimtype %1, 3
+
+;=================================================
+
+#packopt name "mistake" 
+#pack "hsptv_img.bmp"
+
+;=================================================
+; いろいろフラグ
+;=================================================
+
+;#define MAKE_EXE ; 実行ファイルを作成する
+#define DEBUG ; デバッグ
+
+
+;=================================================
+; 定数
+;=================================================
+
+#enum WID_MAIN = 0        ;  640 x  480 メインウインドウ
+#enum WID_RESERVED_1      ;             予約
+#enum WID_TAMADOT         ;  512 x  512 tamadot.bmp読み込みバッファ
+#enum WID_TAMAFACE        ; 1024 x  512 tamaface.bmp読み込みバッファ
+#enum WID_BG_IMG          ;  640 x  480 sozai5.jpg読み込みバッファ
+#enum WID_TABLE_CLOTH_IMG ;  640 x  480 sozai6.jpg読み込みバッファ
+#enum WID_MEET_BUFFER     ; 1024 x 1024 肉拡大バッファ
+#enum WID_DOT_GENERATED   ;  640 x  480 生成済み利用チップ画像
+#enum WID_BG_BUFFER       ;  640 x  480 背景バッファ
+#enum WID_EAT_COUNT       ;  640 x  480 もぐもぐ率カウント用
+#define WID_BUFFER WID_MEET_BUFFER
+
+#const SCREEN_WIDTH  640
+#const SCREEN_HEIGHT 480
+
+#const MEET_ZOOM_SIZE 1024
+
+#const sin0    0.0 ; = sin(M_PI*  0/180.0)
+#const sin90   1.0 ; = sin(M_PI* 90/180.0)
+#const sin180  0.0 ; = sin(M_PI*180/180.0)
+#const sin270 -1.0 ; = sin(M_PI*270/180.0)
+
+#const cos0    1.0 ; = cos(M_PI*  0/180.0)
+#const cos90   0.0 ; = cos(M_PI* 90/180.0)
+#const cos180 -1.0 ; = cos(M_PI*180/180.0)
+#const cos270  0.0 ; = cos(M_PI*270/180.0)
+
+; HSPTV機能を使う
+
+; monoさん(https://mono0x.net/)作の hsptvext.hsp をデバッグでは使う
+#ifdef MAKE_EXE
+ #define HSPTV_OFFLINE
+#else
+ #ifdef _DEBUG
+  #define HSPTV_OFFLINE
+ #endif
+#endif
+#ifdef HSPTV_OFFLINE
+ #addition "hsptvext.hsp"
+ #define ranking data_@m0 ; 内部変数を直接使っているのでゴニョゴニョ
+ ; ファイルが見つからない場合は定数も宣言されないので公式のHSPTVを使うためにもろもろの状態をリセット
+ #ifndef HSPTVEXT_HSP_INCLUDED
+  #undef HSPTV_OFFLINE
+  #undef ranking
+ #endif ; !defined(HSPTVEXT_HSP_INCLUDED)
+#endif ; defined(HSPTV_OFFLINE)
+; リリース or ファイルが無い場合は公式のHSPTV機能を使う
+#ifndef HSPTV_OFFLINE
+ ; サイズを圧縮するため最低限の内容を独自に定義
+ #runtime "hsptv"
+ #regcmd 18
+ #cmd hsptv_send $00
+ #define hsptv_init			sdim ranking : hsptv_send ranking, MINUS_ONE
+ #define hsptv_up(%1,%2="")	hsptv_send ranking, %1, %2
+#endif ; !defined(HSPTV_OFFLINE)
+
+#ifdef DEBUG
+ #define buffe_ screen
+#else
+ #define buffe_ buffer
+#endif ; defined(debug)
+
+; 元ドット絵 × 拡大 × 回転 × 縮小 × 再拡大 ＝ 肉表示用画像
+
+	screen WID_MAIN, 640, 480
+#ifdef DEBUG
+	title "WID_MAIN"
+#endif
+
+	; HSPTV機能を初期化
+	hsptv_init
+
+; WID_TAMADOT ------------------------------------
+;  512 x  512 tamadot.bmp読み込みバッファ
+	
+	buffer WID_TAMADOT
+#ifdef DEBUG
+	title "WID_TAMADOT"
+#endif
+	picload dir_tv + "\\tamadot.bmp"
+
+	; 利用画像(64x64のドット絵チップ画像)
+#const TAMADOT_TIPSIZE 64
+	; 肉ドット絵
+#const MEET_TIP_XPOS   TAMADOT_TIPSIZE * 5
+#const MEET_TIP_YPOS   TAMADOT_TIPSIZE * 5
+
+; WID_TAMAFACE ------------------------------------
+; 1024 x  512 tamaface.bmp読み込みバッファ
+	
+	buffer WID_TAMAFACE
+#ifdef DEBUG
+	title "WID_TAMAFACE"
+#endif
+	picload dir_tv + "\\tamaface.bmp"
+
+	; 利用画像(64x64のドット絵チップ画像)
+#const TAMAFACE_TIPSIZE 256
+	; 口パク絵1
+#const TAMAFACE_A_TIP_XPOS   TAMAFACE_TIPSIZE * 0
+#const TAMAFACE_A_TIP_YPOS   TAMAFACE_TIPSIZE * 0
+	; 口パク絵2
+#const TAMAFACE_B_TIP_XPOS   TAMAFACE_TIPSIZE * 2
+#const TAMAFACE_B_TIP_YPOS   TAMAFACE_TIPSIZE * 0
+
+; WID_BG_IMG ------------------------------------
+;  640 x  480 sozai5.jpg読み込みバッファ
+	
+	buffer WID_BG_IMG
+#ifdef DEBUG
+	title "WID_BG_IMG"
+#endif
+	picload dir_tv + "\\sozai5.jpg"
+	
+#const BG_IMG_WIDTH  640
+#const BG_IMG_HEIGHT 480
+#const BG_IMG_ZOOM_XPOS   0
+#const BG_IMG_ZOOM_YPOS   240
+#const BG_IMG_ZOOM_WIDTH  320
+#const BG_IMG_ZOOM_HEIGHT 240 ; ※ 75 = 100 / 640 * 480
+
+; WID_TABLE_CLOTH_IMG ------------------------------------
+;  640 x  480 sozai6.jpg読み込みバッファ
+	
+	buffer WID_TABLE_CLOTH_IMG
+#ifdef DEBUG
+	title "WID_TABLE_CLOTH_IMG"
+#endif
+	picload dir_tv + "\\sozai6.jpg"     
+
+; WID_MEET_BUFFER --------------------------------
+; 1024 x 1024 肉拡大バッファ
+
+	buffer WID_MEET_BUFFER, MEET_ZOOM_SIZE, MEET_ZOOM_SIZE
+#ifdef DEBUG
+	title "WID_MEET_BUFFER"
+#endif
+
+	; 64ドットを16倍拡大し1024ドットへ
+	gzoom MEET_ZOOM_SIZE, MEET_ZOOM_SIZE, WID_TAMADOT, MEET_TIP_XPOS, MEET_TIP_YPOS, TAMADOT_TIPSIZE, TAMADOT_TIPSIZE
+
+; WID_DOT_GENERATED ------------------------------
+;  640 x  480 生成済み利用チップ画像
+	
+	buffer WID_DOT_GENERATED, 640, 480
+#ifdef DEBUG
+	title "WID_DOT_GENERATED"
+#endif
+	boxf
+
+	; 48 x 48 ドットの画像を生成します
+
+	; 肉画像生成
+
+#const MEET_ROTATED_SIZE      30 ;sqrt(2) * 64 / 2
+#const MEET_ROTATED_X_CENTER  32 - 9 ; 原寸合わせ (汗
+#const MEET_ROTATED_Y_CENTER  32 - 8 ; 原寸合わせ (汗
+
+#const MEET_ROTATED_X1  cos180 * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_X_CENTER
+#const MEET_ROTATED_X2  cos270 * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_X_CENTER
+#const MEET_ROTATED_X3  cos0   * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_X_CENTER
+#const MEET_ROTATED_X4  cos90  * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_X_CENTER
+#const MEET_ROTATED_Y1  sin180 * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_Y_CENTER
+#const MEET_ROTATED_Y2  sin270 * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_Y_CENTER
+#const MEET_ROTATED_Y3  sin0   * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_Y_CENTER
+#const MEET_ROTATED_Y4  sin90  * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_Y_CENTER
+
+#define ctype MEET_ROTATE_X(%1) int( cos(M_PI*(%1)/180.0) * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_X_CENTER )
+#define ctype MEET_ROTATE_Y(%1) int( sin(M_PI*(%1)/180.0) * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_Y_CENTER )
+
+;	dstx = MEET_ROTATED_X1, MEET_ROTATED_X2, MEET_ROTATED_X3, MEET_ROTATED_X4
+;	dsty = MEET_ROTATED_Y1, MEET_ROTATED_Y2, MEET_ROTATED_Y3, MEET_ROTATED_Y4
+;	dstx = MEET_ROTATE_X(180),MEET_ROTATE_X(270),MEET_ROTATE_X(0),MEET_ROTATE_X(90)
+;	dsty = MEET_ROTATE_Y(180),MEET_ROTATE_Y(270),MEET_ROTATE_Y(0),MEET_ROTATE_Y(90)
+	dstx = -6, 23, 53, 23
+	dsty = 24, -5, 24, 54
+	srcx =              0, MEET_ZOOM_SIZE, MEET_ZOOM_SIZE,              0
+	srcy =              0,              0, MEET_ZOOM_SIZE, MEET_ZOOM_SIZE
+
+	;color 255 : boxf 0,0,48,48
+	gmode 2
+	gsquare WID_MEET_BUFFER, dstx, dsty, srcx, srcy
+
+	; お皿(dish)
+
+; 原点
+#const DISH_ORIGIN_XPOS 48
+#const DISH_ORIGIN_YPOS 0
+; お皿の外側
+#const DISH_BASE_X1     DISH_ORIGIN_XPOS + 0
+#const DISH_BASE_Y1     DISH_ORIGIN_YPOS + 24
+#const DISH_BASE_X2     DISH_ORIGIN_XPOS + 48
+#const DISH_BASE_Y2     DISH_ORIGIN_YPOS + 46
+; お皿の影
+#const DISH_SHADOW_X1   DISH_BASE_X1 + 4
+#const DISH_SHADOW_Y1   DISH_BASE_Y1 + 4
+#const DISH_SHADOW_X2   DISH_BASE_X2 - 6
+#const DISH_SHADOW_Y2   DISH_BASE_Y2 - 5
+; お皿の凹み
+#const DISH_DENT_X1     DISH_BASE_X1 + 6
+#const DISH_DNET_Y1     DISH_BASE_Y1 + 6
+#const DISH_DENT_X2     DISH_BASE_X2 - 4
+#const DISH_DENT_Y2     DISH_BASE_Y2 - 5
+
+
+	color 255,255,255
+	circle DISH_BASE_X1, DISH_BASE_Y1, DISH_BASE_X2, DISH_BASE_Y2
+	color 200,200,200
+	circle DISH_SHADOW_X1, DISH_SHADOW_Y1, DISH_SHADOW_X2, DISH_SHADOW_Y2
+	color 255,255,255
+	circle DISH_DENT_X1, DISH_DNET_Y1, DISH_DENT_X2, DISH_DENT_Y2
+
+;
+;	color 128 : boxf 256,48,256+256,48+256
+;	gmode 2
+;	pos   0, 48 : gzoom 256, 256, WID_DOT_GENERATED, 48, 0, 48, 48
+;	pos 256, 48 : gcopy WID_DOT_GENERATED, 0, 48, 256, 256
+;	pos   0, 48 : gzoom 256, 256, WID_DOT_GENERATED, 0, 0, 48, 48
+;	pos 256, 48 : gcopy WID_DOT_GENERATED, 0, 48, 256, 256
+
+; WID_BG_BUFFER ------------------------------------
+;  640 x  480 背景バッファ
+	
+	buffer WID_BG_BUFFER, 640, 480
+#ifdef DEBUG
+	title "WID_BG_BUFFER"
+#endif
+ 
+; WID_EAT_COUNT ------------------------------------
+;  640 x  480 もぐもぐ率カウント用
+	
+	buffer WID_EAT_COUNT, 640, 480
+#ifdef DEBUG
+	title "WID_EAT_COUNT"
+#endif
+ 
+
+	gsel WID_MAIN
+
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+; トップ画面
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+; レイヤー 1 ※最背面
+; 　背景
+; レイヤー 2 ※WID_BG_BUFFER に作る
+; 　珠音
+; 　テーブル
+; 　お皿
+; レイヤー 3 ※最背面
+; 　肉 ※アニメーション
+; 　タイトル
+; 　ランキング ※アニメーション
+
+*title_init
+	gmode 2
+	let0 ranking_frame
+	let0 ranking_offset
+
+	; ランキングを配列に収納
+	notesel ranking
+	sdim tmp, 64
+	sdim ranking_name, 64,  31 : ranking_name.30 = "YOU"
+	dim ranking_score, 31
+	dim ranking_replay, 30, 255 / 3
+	repeat 30 : rank = cnt
+		noteget tmp, cnt * 3
+		logmes tmp
+		if 0 + tmp {
+			; スコア＝食べた個数
+			ranking_score.cnt = 0 + tmp
+			; 名前
+			noteget tmp, cnt * 3 + 1
+			ranking_name.cnt = tmp
+			; 付加情報
+			noteget tmp, cnt * 3 + 2
+			repeat ranking_score.cnt
+				s = strmid(tmp, cnt * 3, 3)
+				gosub *s2n
+				ranking_replay(rank, cnt) = n
+			loop
+		}
+	loop
+
+*title_main
+	
+	let0 key
+
+  ; レイヤー 2 ※WID_BG_BUFFER に作る
+	gsel WID_BG_BUFFER
+	boxf
+	gmode 2
+	
+	; 　珠音
+	pos 0, 100
+	if gettime(6) & 1 {
+		gcopy WID_TAMAFACE, TAMAFACE_A_TIP_XPOS, TAMAFACE_A_TIP_YPOS, TAMAFACE_TIPSIZE, TAMAFACE_TIPSIZE
+	} else {
+		gcopy WID_TAMAFACE, TAMAFACE_B_TIP_XPOS, TAMAFACE_B_TIP_YPOS, TAMAFACE_TIPSIZE, TAMAFACE_TIPSIZE
+	}
+	
+	; 　テーブル
+	dstx = 0,350,400,-50
+	dsty = 350,350,480,480
+	srcx = 0,640,640,0
+	srcy = 0,0,480,480
+	gsquare WID_TABLE_CLOTH_IMG, dstx, dsty, srcx, srcy
+	
+	; 　お皿
+	gsel WID_BUFFER
+	gmode 2
+	color 0,0,0 : boxf
+	pos   0, 48 : gzoom 192, 192, WID_DOT_GENERATED, 48, 0, 48, 48
+	pos 256, 48 : gcopy WID_BUFFER, 0, 48, 192, 192
+	gsel WID_BG_BUFFER
+	pos 26, 280 : gcopy WID_BUFFER, 256, 48, 192, 192
+
+	gsel
+
+	redraw 0
+;	color 240, 240, 240 : boxf
+	
+  ; レイヤー 1
+
+	; 背景
+	pos 0, 0
+	gcopy WID_BG_IMG, 0, 0, BG_IMG_WIDTH, BG_IMG_HEIGHT
+
+  ; レイヤー 2
+	pos 0, 0
+  	gcopy WID_BG_BUFFER, 0, 0, 640, 480
+	
+  ; レイヤー 3
+	; 　タイトル
+	; 　ランキング ※アニメーション
+
+	; 　肉 ※アニメーション
+	meet_zoom = (gettime(7) < 500) * 16
+	gsel WID_BUFFER
+	gmode 2
+	color : boxf
+	pos   0, 48 : gzoom 192+meet_zoom, 192+meet_zoom, WID_DOT_GENERATED, 0, 0, 48, 48
+	pos 256, 48 : gcopy WID_BUFFER, 0, 48, 192+meet_zoom, 192+meet_zoom
+	gsel WID_MAIN
+	pos 26-meet_zoom/2, 280-meet_zoom/2 : gcopy WID_BUFFER, 256, 48, 192+meet_zoom, 192+meet_zoom
+
+	; タイトル
+	game_title = "マンガ肉もぐもぐ"
+	font msgothic, 48, 1
+	color 255,255,255 : pos 230+1, 30+1 : mes game_title
+	color             : pos 230,   30   : mes game_title
+	
+	; ランキング
+	
+	;
+	gsel WID_BUFFER
+	color
+	boxf
+
+	; ランキング表示
+	
+	; 1 フレーム 40ms
+	; 1 フェーズ 125フレーム
+	; 内訳
+	;    0 ～  99 フレーム：ランキング表示
+	;  100 ～ 124 フレーム：クリアエフェクト
+#const FRAME_IN_PHASE				125
+#const CLEAR_EFFECT_FRAME           10
+#const CLEAR_EFFECT_FRAME2			CLEAR_EFFECT_FRAME - 2
+#const CLEAR_EFFECT_TIMING_FRAME	FRAME_IN_PHASE - CLEAR_EFFECT_FRAME
+#const LAST_FRAME					FRAME_IN_PHASE - 1
+
+#const RANKING_FONT_SIZE  24
+#const RANKING_FONT_STYLE 1
+	postfix = "stndrdth"
+	notesel ranking
+	let0 n
+	font msgothic, RANKING_FONT_SIZE, RANKING_FONT_STYLE
+	repeat 30
+;		pos limit((100 - ranking_frame) * 20, -1000, 0) - (100 <= ranking_frame) * (n - ranking_offset) * 20, (n - ranking_offset) * 20
+		rank = cnt
+		n_ = rank - ranking_offset
+		y = limit(n_ * RANKING_FONT_SIZE - double((CLEAR_EFFECT_TIMING_FRAME <= ranking_frame && 0 <= n_) * n_ * (ranking_frame - CLEAR_EFFECT_TIMING_FRAME) * RANKING_FONT_SIZE) / CLEAR_EFFECT_FRAME2, 0, 999)
+		if ranking_offset <= rank && rank < ranking_offset + 15 {
+			pos 0, 640 : mes score : mesx = ginfo_mesx
+			hsvcolor rank * 160 / 30, 255, 255
+			repeat 2
+				pos   1 - cnt,        y : mes strf("%2d%s", rank + 1, strmid(postfix, limit(rank \ 20, 0, 3) * 2, 2))
+				if ranking_score.rank {
+					pos  70 - cnt - mesx, y : mes strf("%3d個完食", ranking_score.rank)
+					pos 180 - cnt,        y : mes ranking_name.rank
+				}
+				color 1
+				y--
+			loop
+		}
+	loop
+
+	gsel
+	gmode 2, 480, 480
+#const RANKING_POS_X 260;80
+#const RANKING_POS_Y 100;480 - 20 * 10 - 20
+	pos RANKING_POS_X, RANKING_POS_Y
+	gcopy WID_BUFFER
+	;
+;	color 255, 255, 255
+;	font TITLE_FONT, 128
+;	pos 64, 25 : mes "mistake"
+	;
+
+	ranking_frame++
+	if FRAME_IN_PHASE <= ranking_frame {
+		ranking_offset += 15
+		ranking_offset \= 30
+		let0 ranking_frame
+	}
+
+	stick key
+
+#const WAIT_TICK    40
+	redraw
+	await WAIT_TICK
+	
+	_ifn 0 != (key & 256) goto *title_main
+
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+; ゲーム画面
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+*fight_init
+	
+	gsel WID_BUFFER
+	pos 0, 0
+	gzoom 640, 480, WID_BG_BUFFER, BG_IMG_ZOOM_XPOS, BG_IMG_ZOOM_YPOS, BG_IMG_ZOOM_WIDTH, BG_IMG_ZOOM_HEIGHT
+	gsel WID_BG_BUFFER
+	color : boxf
+	gmode 2
+	pos 0, 0 : gcopy WID_BUFFER, 0, 0, 640, 480
+	
+	gsel
+
+	dim ranking_eat, 31
+;	dup my_eat, ranking_eat.30
+	dim eat_meet, 30
+	dim my_eat_replay, 128
+	my_eat = 0
+
+	time_start = gettime(6) * 1000 + gettime(7)
+
+	gsel WID_BUFFER
+	gmode 2
+	color : boxf
+	pos   0, 48 : gzoom 364, 364, WID_DOT_GENERATED, 0, 0, 48, 48
+	gsel WID_EAT_COUNT
+	mref vram, 66
+#const VRAM_MAX (640*3/4) * 480
+	eat_max = -1
+	eat_cur = 0
+
+	gsel
+
+	ready = 0
+	ready_text - 0
+	time_limit = 30000
+
+*fight_main
+	
+	time_cur  = gettime(6) * 1000 + gettime(7)
+	time_diff = time_cur - time_start : time_diff += (time_diff < 0) * 60000
+
+	if 30000 < time_diff : goto *timeup_init
+
+	stick key, 256
+
+	redraw 0
+
+	; 肉の状態のチェックと供給
+	gsel WID_EAT_COUNT
+	if key & (ready * 256) : circle mx - 30 - 60, my - 30 - 120, mx + 30 - 60, my + 30 - 120
+	if eat_cur*100/eat_max < 1 || eat_max < 0 {
+		; 肉の供給 初回 or 残りが 1% 以下
+		boxf
+		pos 0, 0 : gcopy WID_BUFFER, 0, 48, 364, 364
+		; カウントアップ
+		if 0 < eat_max {
+			my_eat_replay.my_eat = time_diff
+			my_eat++
+		}
+	}
+	eat_cur = 0
+	repeat VRAM_MAX
+		eat_cur += 0 != vram.cnt
+	loop
+	if eat_max < 0 : eat_max = eat_cur
+	gsel
+
+  ; レイヤー 1
+
+	; 背景
+	pos 0, 0
+	gzoom SCREEN_WIDTH, SCREEN_HEIGHT, WID_BG_IMG, BG_IMG_ZOOM_XPOS, BG_IMG_ZOOM_YPOS, BG_IMG_ZOOM_WIDTH, BG_IMG_ZOOM_HEIGHT
+	
+  ; レイヤー 2
+	
+	; 珠音＋テーブル＋お皿
+	pos 0, 0 : gcopy WID_BG_BUFFER, 0, 0, 640, 480
+
+  ; レイヤー 3
+	mx = mousex
+	my = mousey
+ 
+	; 肉
+	pos 60, 120 : gcopy WID_EAT_COUNT, 0, 0, 364, 364
+
+
+	; 今の値
+ 	font msgothic, 20, 1
+ 	color
+	pos 450, 400
+	mes strf("残り%2d.%d秒", time_limit / 1000, time_limit / 100 \ 10)
+	mes strf("%3d個完食", my_eat)
+	mes strf("%3d個目 残り%3d%%", my_eat + 1, eat_cur*100/eat_max)
+
+ 	color 255,255,255
+	pos 360, 5 : mes "実況"
+
+	if ready {
+	 	; 速報値
+	 	dim try_ranking_index, 10
+	 	repeat 30 : cnt_ = cnt ; リプレイデータから今の時間の個数を取得
+;			repeat ranking_score.cnt
+;		 		if ranking_replay(cnt_, cnt) <= time_diff {
+;			 		ranking_eat.cnt_ = cnt
+;			 	}
+;			loop
+	 		if ranking_eat.cnt < ranking_score.cnt && ranking_replay(cnt, ranking_eat.cnt) <= time_diff {
+		 		ranking_eat.cnt++
+		 	}
+	 	loop
+		dim ranking_eat_, 31 : ranking_eat.30 = my_eat
+		memcpy ranking_eat_, ranking_eat, 31 * 4
+		repeat 10 : cnt_ = cnt
+			repeat 31
+				if ranking_eat_(try_ranking_index.cnt_) <= ranking_eat_.cnt {
+					try_ranking_index.cnt_ = cnt
+				}
+			loop
+			ranking_eat_(try_ranking_index.cnt) = -1
+		loop
+
+		; 実況
+		repeat 10
+			pos 370, 30 + cnt * 20
+			if ranking_eat(try_ranking_index.cnt) {
+				mes strf("%3d個目 %s", ranking_eat(try_ranking_index.cnt), ranking_name(try_ranking_index.cnt))
+			}
+		loop
+	
+		; マウス位置
+		color 255
+		circle mx - 30, my - 30, mx + 30, my + 30, (key & 256) / 256
+	
+		; 今の値
+		time_limit = 30000 - time_diff
+	} else {
+		if 2000 <= time_diff {
+			ready = 1
+			time_start = gettime(6) * 1000 + gettime(7)
+			;
+		} else {
+			color 255, 192
+			font msgothic, 96, 1
+#const READYGO_MSG_XPOS (640 - 4 * 96) / 2
+#const READYGO_MSG_YPOS (480 - 96) / 2
+			pos READYGO_MSG_XPOS, READYGO_MSG_YPOS
+			tmp = "れでぃー ごー！"
+			mes strmid(tmp, (time_diff / 1000) * 8, 8)
+		}
+	}
+
+#if 0;def DEBUG
+	color 255
+	font msgothic, 12
+	repeat 30
+		pos 0, 12*cnt : mes strf("%2d: %3d", cnt + 1, eat_meet.cnt)
+	loop
+	mes strf("%5d ms eat=%3d", time_diff, my_eat)
+	mes strf("%3d.%02d", eat_cur*100/eat_max, eat_cur*10000/eat_max\100)
+	repeat my_eat
+		pos 100, 12*cnt : mes strf("%3d", my_eat_replay.cnt)
+	loop
+	repeat 30
+		pos 200, 12*cnt : mes strf("%3d %5d", ranking_eat.cnt,ranking_replay(cnt, ranking_eat.cnt))
+	loop
+	pos 200, 12*30 : mes strf("%3d", ranking_eat.cnt)
+#endif
+
+	redraw
+
+	await 1
+	goto *fight_main
+
+*timeup_init
+	; 今の画面をコピー
+	gsel WID_BG_BUFFER
+	gmode
+	pos 0, 0
+	gcopy WID_MAIN, 0, 0, 640, 480
+	gsel
+	gmode
+
+	if my_eat = 0 : goto *timeup_main
+
+	ss = ""
+	repeat my_eat
+		n = my_eat_replay.cnt
+		gosub *n2s
+		ss += s
+	loop
+	hsptv_up my_eat, ss
+
+*timeup_main
+	
+	; タイムアップの文字を点滅させる
+	repeat 4
+		redraw 0
+		color 255:boxf
+		pos 0, 0
+		gcopy WID_BG_BUFFER, 0, 0, 640, 480
+		if cnt \ 2 {
+			font msgothic, 72, 1
+#const TIMEUP_MSG_XPOS (640 - 7 * 72) / 2
+#const TIMEUP_MSG_YPOS (480 - 72) / 2
+			pos TIMEUP_MSG_XPOS, TIMEUP_MSG_YPOS
+			mes "たいむあっぷ！"
+		}
+		redraw
+		wait 100
+	loop
+
+	goto *title_init
+
+*n2s
+	sdim s, 64
+	repeat 3
+		; 32 ... 126 -> 
+		poke s, 2 - cnt, 32 + n \ 94
+		n /= 94
+	loop
+	return
+*s2n
+	n = 0
+	repeat 3
+		; 32 ... 126
+		n = n * 94 + peek(s, cnt) - 32
+	loop
+	return
+
