@@ -302,14 +302,6 @@ MINUS_ONE-- ; MINUS_ONE = -1
 	color 255, 255, 255
 	circle DISH_DENT_X1, DISH_DNET_Y1, DISH_DENT_X2, DISH_DENT_Y2
 
-;
-;	color 128 : boxf 256,48,256+256,48+256
-;	gmode 2
-;	pos   0, 48 : gzoom 256, 256, WID_DOT_GENERATED, 48, 0, 48, 48
-;	pos 256, 48 : gcopy WID_DOT_GENERATED, 0, 48, 256, 256
-;	pos   0, 48 : gzoom 256, 256, WID_DOT_GENERATED, 0, 0, 48, 48
-;	pos 256, 48 : gcopy WID_DOT_GENERATED, 0, 48, 256, 256
-
 ; WID_BG_BUFFER ------------------------------------
 ;  640 x  480 背景バッファ
 	
@@ -325,9 +317,8 @@ MINUS_ONE-- ; MINUS_ONE = -1
 #ifdef DEBUG
 	title "WID_EAT_COUNT"
 #endif
- 
 
-	gsel WID_MAIN
+	gsel
 
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ; トップ画面
@@ -433,8 +424,17 @@ MINUS_ONE-- ; MINUS_ONE = -1
 	color : boxf
 	pos   0, 48 : gzoom 192+meet_zoom, 192+meet_zoom, WID_DOT_GENERATED, 0, 0, 48, 48
 	pos 256, 48 : gcopy WID_BUFFER, 0, 48, 192+meet_zoom, 192+meet_zoom
-	gsel WID_MAIN
+	gsel
 	pos 26-meet_zoom/2, 280-meet_zoom/2 : gcopy WID_BUFFER, 256, 48, 192+meet_zoom, 192+meet_zoom
+
+	; 操作説明
+	font msgothic, 24, 1
+	color 255, 255, 255
+	repeat 2
+		pos 30 - cnt, 370 - cnt
+		mes "左クリックで開始"
+		color
+	loop
 
 	; タイトル
 	game_title = "マンガ肉もぐもぐ"
@@ -492,11 +492,6 @@ MINUS_ONE-- ; MINUS_ONE = -1
 #const RANKING_POS_Y 100;480 - 20 * 10 - 20
 	pos RANKING_POS_X, RANKING_POS_Y
 	gcopy WID_BUFFER
-	;
-;	color 255, 255, 255
-;	font TITLE_FONT, 128
-;	pos 64, 25 : mes "mistake"
-	;
 
 	ranking_frame++
 	if FRAME_IN_PHASE <= ranking_frame {
@@ -529,12 +524,11 @@ MINUS_ONE-- ; MINUS_ONE = -1
 	gsel
 
 	dim ranking_eat, HSPTV_RANK_MAX_PLUS_ONE
-;	dup my_eat, ranking_eat.HSPTV_RANK_MAX
 	dim eat_meet, HSPTV_RANK_MAX
 	dim my_eat_replay, 128
 	my_eat = 0
 
-	time_start = gettime(6) * 1000 + gettime(7)
+	time_start = gettime(6) * 1000 + gettime(7) ; ※最大 60秒までの差分
 
 	gsel WID_BUFFER
 	gmode 2
@@ -549,14 +543,15 @@ MINUS_ONE-- ; MINUS_ONE = -1
 	gsel
 
 	ready = 0
-	ready_text - 0
 	time_limit = 30000
 
 *fight_main
 	
+	; 最大60秒までの差分を計算
 	time_cur  = gettime(6) * 1000 + gettime(7)
 	time_diff = time_cur - time_start : time_diff += (time_diff < 0) * 60000
 
+	; タイムアップチェック
 	if 30000 < time_diff : goto *timeup_init
 
 	stick key, 256
@@ -611,8 +606,8 @@ MINUS_ONE-- ; MINUS_ONE = -1
 	mes strf("%3d個目 残り%3d%%", my_eat + 1, eat_cur*100/eat_max)
 
  	color 
-	repeat 2 : cnt_ = cnt
-		pos 360 - cnt, 5 - cnt : mes "実況"
+	repeat 2
+		pos 360 - cnt * 2, 5 - cnt * 2 : mes "実況"
 	 	color 255, 255, 255
 	loop
  	color
@@ -636,7 +631,7 @@ MINUS_ONE-- ; MINUS_ONE = -1
 		loop
 
 		; 実況
-		repeat 2 : cnt_ = cnt
+		repeat 2 : cnt_ = cnt * 2
 			repeat 10
 				pos 370 - cnt_, 30 + cnt * 20 - cnt_
 				if ranking_eat(try_ranking_index.cnt) {
@@ -658,13 +653,28 @@ MINUS_ONE-- ; MINUS_ONE = -1
 			time_start = gettime(6) * 1000 + gettime(7)
 			;
 		} else {
-			color 255, 192
+			color
 			font msgothic, 96, 1
+			repeat 2
 #const READYGO_MSG_XPOS (640 - 4 * 96) / 2
 #const READYGO_MSG_YPOS (480 - 96) / 2
-			pos READYGO_MSG_XPOS, READYGO_MSG_YPOS
-			tmp = "れでぃー ごー！"
-			mes strmid(tmp, (time_diff / 1000) * 8, 8)
+				pos READYGO_MSG_XPOS - cnt * 2, READYGO_MSG_YPOS - cnt * 2
+				tmp = "れでぃー ごー！"
+				mes strmid(tmp, (time_diff / 1000) * 8, 8)
+				color 255, 192
+			loop
+			; 操作説明
+			color
+			font msgothic, 32, 1
+			repeat 2
+#const OPERATION_MSG_XPOS (640 - 10 * 32) / 2
+#const OPERATION_MSG_YPOS READYGO_MSG_YPOS + 96 + 20
+				pos OPERATION_MSG_XPOS - cnt * 2, OPERATION_MSG_YPOS - cnt * 2
+				mes "左クリックした状態で"
+				mes "グリグリ動かして"
+				mes "マンガ肉を食べよう！"
+				color 255
+			loop
 		}
 	}
 
