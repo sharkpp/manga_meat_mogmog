@@ -60,6 +60,9 @@
 ; -1 の値
 MINUS_ONE-- ; MINUS_ONE = -1
 
+; msgothic_
+msgothic_ = msgothic
+
 ;=================================================
 
 #packopt name "food_fighter" 
@@ -419,26 +422,27 @@ MINUS_ONE-- ; MINUS_ONE = -1
 
 	; 　肉 ※アニメーション
 	meet_zoom = (gettime(7) < 500) * 16
+	tip_size = 192 + meet_zoom
 	gsel WID_BUFFER
 	gmode 2
 	color : boxf
-	pos   0, 48 : gzoom 192+meet_zoom, 192+meet_zoom, WID_DOT_GENERATED, 0, 0, 48, 48
-	pos 256, 48 : gcopy WID_BUFFER, 0, 48, 192+meet_zoom, 192+meet_zoom
+	pos   0, 48 : gzoom tip_size, tip_size, WID_DOT_GENERATED, 0, 0, 48, 48
+	pos 256, 48 : gcopy WID_BUFFER, 0, 48, tip_size, tip_size
 	gsel
-	pos 26-meet_zoom/2, 280-meet_zoom/2 : gcopy WID_BUFFER, 256, 48, 192+meet_zoom, 192+meet_zoom
+	pos 26-meet_zoom/2, 280-meet_zoom/2 : gcopy WID_BUFFER, 256, 48, tip_size, tip_size
 
 	; 操作説明
-	font msgothic, 24, 1
-	color 255, 255, 255
+	font msgothic_, 24, 1
+	color
 	repeat 2
 		pos 30 - cnt, 370 - cnt
 		mes "左クリックで開始"
-		color
+		color 255
 	loop
 
 	; タイトル
 	game_title = "マンガ肉もぐもぐ"
-	font msgothic, 48, 1
+	font msgothic_, 48, 1
 	color 255, 255, 255 : pos 230+1, 30+1 : mes game_title
 	color             : pos 230,   30   : mes game_title
 	
@@ -466,7 +470,7 @@ MINUS_ONE-- ; MINUS_ONE = -1
 #const RANKING_FONT_STYLE 1
 	postfix = "stndrdth"
 	notesel ranking
-	font msgothic, RANKING_FONT_SIZE, RANKING_FONT_STYLE
+	font msgothic_, RANKING_FONT_SIZE, RANKING_FONT_STYLE
 	repeat HSPTV_RANK_MAX : rank = cnt
 ;		pos limit((100 - ranking_frame) * 20, -1000, 0) - (100 <= ranking_frame) * (n - ranking_offset) * 20, (n - ranking_offset) * 20
 		n_ = rank - ranking_offset
@@ -598,7 +602,7 @@ MINUS_ONE-- ; MINUS_ONE = -1
 
 
 	; 今の値
- 	font msgothic, 20, 1
+ 	font msgothic_, 20, 1
  	color
 	pos 450, 400
 	mes strf("残り%2d.%d秒", time_limit / 1000, time_limit / 100 \ 10)
@@ -654,7 +658,7 @@ MINUS_ONE-- ; MINUS_ONE = -1
 			;
 		} else {
 			color
-			font msgothic, 96, 1
+			font msgothic_, 96, 1
 			repeat 2
 #const READYGO_MSG_XPOS (640 - 4 * 96) / 2
 #const READYGO_MSG_YPOS (480 - 96) / 2
@@ -665,7 +669,7 @@ MINUS_ONE-- ; MINUS_ONE = -1
 			loop
 			; 操作説明
 			color
-			font msgothic, 32, 1
+			font msgothic_, 32, 1
 			repeat 2
 #const OPERATION_MSG_XPOS (640 - 10 * 32) / 2
 #const OPERATION_MSG_YPOS READYGO_MSG_YPOS + 96 + 20
@@ -680,7 +684,7 @@ MINUS_ONE-- ; MINUS_ONE = -1
 
 #if 0;def DEBUG
 	color 255
-	font msgothic, 12
+	font msgothic_, 12
 	repeat HSPTV_RANK_MAX
 		pos 0, 12*cnt : mes strf("%2d: %3d", cnt + 1, eat_meet.cnt)
 	loop
@@ -728,7 +732,7 @@ MINUS_ONE-- ; MINUS_ONE = -1
 		pos 0, 0
 		gcopy WID_BG_BUFFER, 0, 0, 640, 480
 		if cnt \ 2 {
-			font msgothic, 72, 1
+			font msgothic_, 72, 1
 #const TIMEUP_MSG_XPOS (640 - 7 * 72) / 2
 #const TIMEUP_MSG_YPOS (480 - 72) / 2
 			pos TIMEUP_MSG_XPOS, TIMEUP_MSG_YPOS
