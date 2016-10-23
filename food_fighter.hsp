@@ -646,7 +646,7 @@ msgothic_ = msgothic
 
 		; マウス位置
 		color 255
-		circle mx - 30, my - 30, mx + 30, my + 30, (key & 256) / 256
+		circle mx - EAT_SIZE, my - EAT_SIZE, mx + EAT_SIZE, my + EAT_SIZE, (key & 256) / 256
 	
 		; 今の値
 		time_limit = 30000 - time_diff
