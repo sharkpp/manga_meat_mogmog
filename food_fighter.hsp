@@ -85,7 +85,7 @@ msgothic_ = msgothic
  #define HSPTV_OFFLINE
 #else
  #ifdef _DEBUG
-;  #define HSPTV_OFFLINE
+  #define HSPTV_OFFLINE
  #endif
 #endif
 #ifdef HSPTV_OFFLINE
@@ -144,7 +144,7 @@ msgothic_ = msgothic
 
 #const MEET_ZOOM_SIZE 1024
 
-#define EAT_SIZE 30
+#define EAT_SIZE 40
 
 #const sin0    0.0 ; = sin(M_PI*  0/180.0)
 #const sin90   1.0 ; = sin(M_PI* 90/180.0)
@@ -348,7 +348,7 @@ msgothic_ = msgothic
 	; ランキングを配列に収納
 	notesel ranking
 	sdim tmp, 64
-	sdim ranking_name, 64,  HSPTV_RANK_MAX_PLUS_ONE : ranking_name.HSPTV_RANK_MAX = "YOU"
+	sdim ranking_name, 64,  HSPTV_RANK_MAX_PLUS_ONE : ranking_name.HSPTV_RANK_MAX = "←★★★"
 	dim ranking_score, HSPTV_RANK_MAX_PLUS_ONE
 	dim ranking_replay, HSPTV_RANK_MAX, 255 / 3
 	repeat HSPTV_RANK_MAX : rank = cnt
@@ -638,7 +638,12 @@ msgothic_ = msgothic
 			repeat 10
 				pos 370 - cnt_, 30 + cnt * 20 - cnt_
 				if ranking_eat(try_ranking_index.cnt) {
-					mes strf("%3d個目 %s", ranking_eat(try_ranking_index.cnt), ranking_name(try_ranking_index.cnt))
+					s = strf("%3d個目 %s", ranking_eat(try_ranking_index.cnt), ranking_name(try_ranking_index.cnt))
+					if 0 < cnt_ && HSPTV_RANK_MAX <= try_ranking_index.cnt { ; 今回のスコア
+						color 255, 240 : mes s : color 255, 255, 255
+					} else {
+						mes s
+					}
 				}
 			loop
 			color 255, 255, 255
@@ -674,7 +679,7 @@ msgothic_ = msgothic
 #const OPERATION_MSG_YPOS READYGO_MSG_YPOS + 96 + 20
 				pos OPERATION_MSG_XPOS - cnt * 2, OPERATION_MSG_YPOS - cnt * 2
 				mes "左クリックした状態で"
-				mes "グリグリ動かして"
+				mes "  グリグリ動かして"
 				mes "マンガ肉を食べよう！"
 				color 255
 			loop
@@ -727,7 +732,7 @@ msgothic_ = msgothic
 	; タイムアップの文字を点滅させる
 	repeat 4
 		redraw 0
-		color 255:boxf
+		color 255, 160
 		pos 0, 0
 		gcopy WID_BG_BUFFER, 0, 0, 640, 480
 		if cnt \ 2 {
