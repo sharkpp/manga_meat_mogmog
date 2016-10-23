@@ -1,6 +1,42 @@
+;-------------------------------------------------------------------------------
+; food_fighter.hsp - HSP Program Contest 2016 HSPTV class entries.
+;-------------------------------------------------------------------------------
+;
+; Copyright(c) 2016 sharkpp All rights reserved.
+;
+; The MIT License
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in
+; all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+; THE SOFTWARE.
+;
+;-------------------------------------------------------------------------------
 
-
-
+;-------------------------------------------------------------------------------
+; あなたは、第13回マンガ肉大食い大会にエントリーしました！
+; みんな憧れのマンガ肉をもぐもぐしましょう。
+; 制限時間は約30秒！
+; マウスを左クリックしながらマンガ肉をもぐもぐです♪
+; そして、ランキング上位者と夢の対決が実現。
+; リアルタイムで対戦できます。
+;
+; このゲームはフィクションです。
+; 実在の人物や団体などとは関係ありません。
+;-------------------------------------------------------------------------------
 
 ;=================================================
 ; オブジェクトサイズを圧縮するためのあれこれ
@@ -258,7 +294,6 @@ MINUS_ONE-- ; MINUS_ONE = -1
 #const DISH_DNET_Y1     DISH_BASE_Y1 + 6
 #const DISH_DENT_X2     DISH_BASE_X2 - 4
 #const DISH_DENT_Y2     DISH_BASE_Y2 - 5
-
 
 	color 255, 255, 255
 	circle DISH_BASE_X1, DISH_BASE_Y1, DISH_BASE_X2, DISH_BASE_Y2
