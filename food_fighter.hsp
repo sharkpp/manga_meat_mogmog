@@ -144,6 +144,8 @@ msgothic_ = msgothic
 
 #const MEET_ZOOM_SIZE 1024
 
+#define EAT_SIZE 30
+
 #const sin0    0.0 ; = sin(M_PI*  0/180.0)
 #const sin90   1.0 ; = sin(M_PI* 90/180.0)
 #const sin180  0.0 ; = sin(M_PI*180/180.0)
@@ -378,12 +380,9 @@ msgothic_ = msgothic
 	gmode 2
 	
 	; 　珠音
+	TAMAFACE_TIP_XPOS = (gettime(6) & 1) * TAMAFACE_B_TIP_XPOS
 	pos 0, 100
-	if gettime(6) & 1 {
-		gcopy WID_TAMAFACE, TAMAFACE_A_TIP_XPOS, TAMAFACE_A_TIP_YPOS, TAMAFACE_TIPSIZE, TAMAFACE_TIPSIZE
-	} else {
-		gcopy WID_TAMAFACE, TAMAFACE_B_TIP_XPOS, TAMAFACE_B_TIP_YPOS, TAMAFACE_TIPSIZE, TAMAFACE_TIPSIZE
-	}
+	gcopy WID_TAMAFACE, TAMAFACE_TIP_XPOS, TAMAFACE_A_TIP_YPOS, TAMAFACE_TIPSIZE, TAMAFACE_TIPSIZE
 	
 	; 　テーブル
 	dstx = 0,350,400,-50
@@ -559,16 +558,19 @@ msgothic_ = msgothic
 	if 30000 < time_diff : goto *timeup_init
 
 	stick key, 256
-
+	
+	mx = mousex
+	my = mousey
+ 
 	redraw 0
 
 	; 肉の状態のチェックと供給
 	gsel WID_EAT_COUNT
-	if key & (ready * 256) : circle mx - 30 - 60, my - 30 - 120, mx + 30 - 60, my + 30 - 120
+	if key & (ready * 256) : circle mx - EAT_SIZE, my - EAT_SIZE, mx + EAT_SIZE, my + EAT_SIZE
 	if eat_cur*100/eat_max < 1 || eat_max < 0 {
 		; 肉の供給 初回 or 残りが 1% 以下
 		boxf
-		pos 0, 0 : gcopy WID_BUFFER, 0, 48, 364, 364
+		pos 60, 120 : gcopy WID_BUFFER, 0, 48, 364, 364
 		; カウントアップ
 		if 0 < eat_max {
 			my_eat_replay.my_eat = time_diff
@@ -594,12 +596,9 @@ msgothic_ = msgothic
 	pos 0, 0 : gcopy WID_BG_BUFFER, 0, 0, 640, 480
 
   ; レイヤー 3
-	mx = mousex
-	my = mousey
- 
-	; 肉
-	pos 60, 120 : gcopy WID_EAT_COUNT, 0, 0, 364, 364
 
+	; 肉
+	pos 60, 120 : gcopy WID_EAT_COUNT, 60, 120, 364, 364
 
 	; 今の値
  	font msgothic_, 20, 1
@@ -671,7 +670,7 @@ msgothic_ = msgothic
 			color
 			font msgothic_, 32, 1
 			repeat 2
-#const OPERATION_MSG_XPOS (640 - 10 * 32) / 2
+#const OPERATION_MSG_XPOS (640 - 10 * 32) / 2 - 80
 #const OPERATION_MSG_YPOS READYGO_MSG_YPOS + 96 + 20
 				pos OPERATION_MSG_XPOS - cnt * 2, OPERATION_MSG_YPOS - cnt * 2
 				mes "左クリックした状態で"
