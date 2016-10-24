@@ -543,7 +543,7 @@ msgothic_ = msgothic
 	dim ranking_eat, HSPTV_RANK_MAX_PLUS_ONE
 	dim eat_meet, HSPTV_RANK_MAX
 	dim my_eat_replay, 128
-	my_eat = 0
+	let0 my_eat
 
 	time_start = gettime(6) * 1000 + gettime(7) ; ※最大 60秒までの差分
 
@@ -555,11 +555,11 @@ msgothic_ = msgothic
 	mref vram, 66
 #const VRAM_MAX (640*3/4) * 480
 	eat_area_max = MINUS_ONE
-	eat_area_cur = 0
+	let0 eat_area_cur
 
 	gsel
 
-	ready = 0
+	let0 ready
 	time_limit = 30000
 
 *fight_main
@@ -569,7 +569,7 @@ msgothic_ = msgothic
 	time_diff = time_cur - time_start : time_diff += (time_diff < 0) * 60000
 
 	; タイムアップチェック
-	if 30000 < time_diff : goto *timeup_init
+	_ifn 30000 >= time_diff goto *timeup_init
 
 	stick key, 256
 	
@@ -595,7 +595,7 @@ msgothic_ = msgothic
 			my_eat++
 		}
 	}
-	eat_area_cur = 0
+	let0 eat_area_cur
 	repeat VRAM_MAX
 		eat_area_cur += 0 != vram.cnt
 	loop
@@ -629,7 +629,7 @@ msgothic_ = msgothic
 
  	;color 
 	repeat 2
-		pos 340 - cnt * 2, 5 - cnt * 2 : mes "実況 ----"
+		pos 340 - cnt * 2, 5 - cnt * 2 : mes "実況"
 	 	color 255, 255, 255
 	loop
  	color
@@ -676,7 +676,7 @@ msgothic_ = msgothic
 		time_limit = 30000 - time_diff
 	} else {
 		if 2000 <= time_diff {
-			ready = 1
+			let1 ready
 			time_start = gettime(6) * 1000 + gettime(7)
 			;
 		} else {
@@ -734,7 +734,6 @@ msgothic_ = msgothic
 	pos 0, 0
 	gcopy WID_MAIN, 0, 0, 640, 480
 	gsel
-	gmode
 
 *timeup_main
 	
