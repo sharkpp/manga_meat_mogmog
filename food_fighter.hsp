@@ -717,16 +717,6 @@ msgothic_ = msgothic
 	gsel
 	gmode
 
-	if my_eat = 0 : goto *timeup_main
-
-	ss = ""
-	repeat my_eat
-		n = my_eat_replay.cnt
-		gosub *n2s
-		ss += s
-	loop
-	hsptv_up my_eat, ss
-
 *timeup_main
 	
 	; タイムアップの文字を点滅させる
@@ -745,6 +735,17 @@ msgothic_ = msgothic
 		redraw
 		wait 100
 	loop
+
+	_ifn 0 < my_eat goto *title_init
+
+	; ランキング送信
+	ss = ""
+	repeat my_eat
+		n = my_eat_replay.cnt
+		gosub *n2s
+		ss += s
+	loop
+	hsptv_up my_eat, ss
 
 	goto *title_init
 
