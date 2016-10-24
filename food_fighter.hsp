@@ -54,8 +54,11 @@
 ; v = 1 ※初回 or dimで初期化直後のみ有効
 #define let1(%1)			%1++
 
-; v = 0.0
+; v = 0.0 ※ -7 byte
 #define let0d(%1)			dimtype %1, 3
+
+; sdim s, 64 ※ -4 byte
+#define sdim64(%1)			sdim %1
 
 ; -1 の値
 MINUS_ONE-- ; MINUS_ONE = -1
@@ -143,6 +146,8 @@ msgothic_ = msgothic
 #const SCREEN_HEIGHT 480
 
 #const MEET_ZOOM_SIZE 1024
+
+#const EAT_MAX 255 / 3 ; もぐもぐできる最大数、HSPTVのコメントのサイズに依存
 
 #define EAT_SIZE 40
 
@@ -347,27 +352,33 @@ msgothic_ = msgothic
 
 	; ランキングを配列に収納
 	notesel ranking
-	sdim tmp, 64
+	sdim64 tmp
 	sdim ranking_name, 64,  HSPTV_RANK_MAX_PLUS_ONE : ranking_name.HSPTV_RANK_MAX = "←★★★"
 	dim ranking_score, HSPTV_RANK_MAX_PLUS_ONE
-	dim ranking_replay, HSPTV_RANK_MAX, 255 / 3
-	repeat HSPTV_RANK_MAX : rank = cnt
-		noteget tmp, cnt * 3
-		logmes tmp
+	dim ranking_replay, HSPTV_RANK_MAX, EAT_MAX
+	let0 line_
+	repeat HSPTV_RANK_MAX
+		noteget tmp, line_
 		if 0 + tmp {
 			; スコア＝食べた個数
 			ranking_score.cnt = 0 + tmp
 			; 名前
-			noteget tmp, cnt * 3 + 1
+			noteget tmp, line_ + 1
 			ranking_name.cnt = tmp
 			; 付加情報
-			noteget tmp, cnt * 3 + 2
+			noteget tmp, line_ + 2
+			let0 cnt_
 			repeat ranking_score.cnt
-				s = strmid(tmp, cnt * 3, 3)
-				gosub *s2n
-				ranking_replay(rank, cnt) = n
+				let0 n
+				repeat 3
+					; 32 ... 126
+					n = n * 94 + peek(tmp, cnt_) - 32
+					cnt_++
+				loop
+				ranking_replay(line_ / 3, cnt) = n
 			loop
 		}
+		line_ += 3
 	loop
 
 *title_main
@@ -442,8 +453,8 @@ msgothic_ = msgothic
 	; タイトル
 	game_title = "マンガ肉もぐもぐ"
 	font msgothic_, 48, 1
-	color 255, 255, 255 : pos 230+1, 30+1 : mes game_title
-	color             : pos 230,   30   : mes game_title
+	color 255, 255, 255 : pos 231, 31 : mes game_title
+	color               : pos 230, 30 : mes game_title
 	
 	; ランキング
 	
@@ -540,8 +551,8 @@ msgothic_ = msgothic
 	gsel WID_EAT_COUNT
 	mref vram, 66
 #const VRAM_MAX (640*3/4) * 480
-	eat_max = MINUS_ONE
-	eat_cur = 0
+	eat_area_max = MINUS_ONE
+	eat_area_cur = 0
 
 	gsel
 
@@ -567,21 +578,21 @@ msgothic_ = msgothic
 	; 肉の状態のチェックと供給
 	gsel WID_EAT_COUNT
 	if key & (ready * 256) : circle mx - EAT_SIZE, my - EAT_SIZE, mx + EAT_SIZE, my + EAT_SIZE
-	if eat_cur*100/eat_max < 1 || eat_max < 0 {
+	if eat_area_cur*100/eat_area_max < 1 || eat_area_max < 0 {
 		; 肉の供給 初回 or 残りが 1% 以下
 		boxf
 		pos 60, 120 : gcopy WID_BUFFER, 0, 48, 364, 364
 		; カウントアップ
-		if 0 < eat_max {
+		if 0 < eat_area_max {
 			my_eat_replay.my_eat = time_diff
 			my_eat++
 		}
 	}
-	eat_cur = 0
+	eat_area_cur = 0
 	repeat VRAM_MAX
-		eat_cur += 0 != vram.cnt
+		eat_area_cur += 0 != vram.cnt
 	loop
-	if eat_max < 0 : eat_max = eat_cur
+	if eat_area_max < 0 : eat_area_max = eat_area_cur
 	gsel
 
   ; レイヤー 1
@@ -606,7 +617,7 @@ msgothic_ = msgothic
 	pos 450, 400
 	mes strf("残り%2d.%d秒", time_limit / 1000, time_limit / 100 \ 10)
 	mes strf("%3d個完食", my_eat)
-	mes strf("%3d個目 残り%3d%%", my_eat + 1, eat_cur*100/eat_max)
+	mes strf("%3d個目 残り%3d%%", my_eat + 1, eat_area_cur*100/eat_area_max)
 
  	color 
 	repeat 2
@@ -693,12 +704,12 @@ msgothic_ = msgothic
 		pos 0, 12*cnt : mes strf("%2d: %3d", cnt + 1, eat_meet.cnt)
 	loop
 	mes strf("%5d ms eat=%3d", time_diff, my_eat)
-	mes strf("%3d.%02d", eat_cur*100/eat_max, eat_cur*10000/eat_max\100)
+	mes strf("%3d.%02d", eat_area_cur*100/eat_area_max, eat_area_cur*10000/eat_area_max\100)
 	repeat my_eat
 		pos 100, 12*cnt : mes strf("%3d", my_eat_replay.cnt)
 	loop
 	repeat HSPTV_RANK_MAX
-		pos 200, 12*cnt : mes strf("%3d %5d", ranking_eat.cnt,ranking_replay(cnt, ranking_eat.cnt))
+		pos 200, 12*cnt : mes strf("%3d %5d", ranking_eat.cnt, ranking_replay(cnt, ranking_eat.cnt))
 	loop
 	pos 200, 12*30 : mes strf("%3d", ranking_eat.cnt)
 #endif
@@ -739,29 +750,18 @@ msgothic_ = msgothic
 	_ifn 0 < my_eat goto *title_init
 
 	; ランキング送信
-	ss = ""
+	sdim64 ss
 	repeat my_eat
 		n = my_eat_replay.cnt
-		gosub *n2s
+		sdim64 s
+		repeat 3
+			; 32 ... 126 -> 
+			poke s, 2 - cnt, 32 + n \ 94
+			n /= 94
+		loop
 		ss += s
 	loop
 	hsptv_up my_eat, ss
 
 	goto *title_init
-
-*n2s
-	sdim s, 64
-	repeat 3
-		; 32 ... 126 -> 
-		poke s, 2 - cnt, 32 + n \ 94
-		n /= 94
-	loop
-	return
-*s2n
-	n = 0
-	repeat 3
-		; 32 ... 126
-		n = n * 94 + peek(s, cnt) - 32
-	loop
-	return
 
