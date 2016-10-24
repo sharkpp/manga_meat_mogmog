@@ -149,7 +149,7 @@ msgothic_ = msgothic
 
 #const EAT_MAX 255 / 3 ; もぐもぐできる最大数、HSPTVのコメントのサイズに依存
 
-#define EAT_SIZE 40
+#define EAT_SIZE 45
 
 #const sin0    0.0 ; = sin(M_PI*  0/180.0)
 #const sin90   1.0 ; = sin(M_PI* 90/180.0)
@@ -406,7 +406,7 @@ msgothic_ = msgothic
 	; 　お皿
 	gsel WID_BUFFER
 	gmode 2
-	color 0, 0, 0 : boxf
+	color : boxf
 	pos   0, 48 : gzoom 192, 192, WID_DOT_GENERATED, 48, 0, 48, 48
 	pos 256, 48 : gcopy WID_BUFFER, 0, 48, 192, 192
 	gsel WID_BG_BUFFER
@@ -581,9 +581,11 @@ msgothic_ = msgothic
 #const GAME_MAIN_MEET_XPOS  60 - BG_IMG_ZOOM_XPOS * 2
 #const GAME_MAIN_MEET_YPOS 120
 
+	EAT_SIZE_R = EAT_SIZE - time_cur / 100 \10
+
 	; 肉の状態のチェックと供給
 	gsel WID_EAT_COUNT
-	if key & (ready * 256) : circle mx - EAT_SIZE, my - EAT_SIZE, mx + EAT_SIZE, my + EAT_SIZE
+	if key & (ready * 256) : circle mx - EAT_SIZE_R, my - EAT_SIZE_R, mx + EAT_SIZE_R, my + EAT_SIZE_R
 	if eat_area_cur*100/eat_area_max < 1 || eat_area_max < 0 {
 		; 肉の供給 初回 or 残りが 1% 以下
 		boxf
@@ -670,7 +672,7 @@ msgothic_ = msgothic
 
 		; マウス位置
 		color 255
-		circle mx - EAT_SIZE, my - EAT_SIZE, mx + EAT_SIZE, my + EAT_SIZE, (key & 256) / 256
+		circle mx - EAT_SIZE_R, my - EAT_SIZE_R, mx + EAT_SIZE_R, my + EAT_SIZE_R, (key & 256) / 256
 	
 		; 今の値
 		time_limit = 30000 - time_diff
