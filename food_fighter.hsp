@@ -679,7 +679,7 @@ msgothic_ = msgothic
 #const OPERATION_MSG_YPOS READYGO_MSG_YPOS + 96 + 20
 				pos OPERATION_MSG_XPOS - cnt * 2, OPERATION_MSG_YPOS - cnt * 2
 				mes "左クリックした状態で"
-				mes "  グリグリ動かして"
+				mes " ぐるぐると動かして"
 				mes "マンガ肉を食べよう！"
 				color 255
 			loop
