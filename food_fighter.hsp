@@ -355,7 +355,8 @@ msgothic_ = msgothic
 	sdim64 tmp
 	sdim ranking_name, 64,  HSPTV_RANK_MAX_PLUS_ONE : ranking_name.HSPTV_RANK_MAX = "Å©ÅöÅöÅö"
 	dim ranking_score, HSPTV_RANK_MAX_PLUS_ONE
-	dim ranking_replay, HSPTV_RANK_MAX, EAT_MAX
+#const EAT_MAX_ EAT_MAX + 1 ; î‘ï∫ï∂Ç‡ä‹ÇﬂÇÈ
+	dim ranking_replay, HSPTV_RANK_MAX, EAT_MAX_
 	let0 line_
 	repeat HSPTV_RANK_MAX
 		noteget tmp, line_
