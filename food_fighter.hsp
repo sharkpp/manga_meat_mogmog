@@ -217,7 +217,7 @@ msgothic_ = msgothic
 	
 #const BG_IMG_WIDTH  640
 #const BG_IMG_HEIGHT 480
-#const BG_IMG_ZOOM_XPOS   0
+#const BG_IMG_ZOOM_XPOS   20
 #const BG_IMG_ZOOM_YPOS   240
 #const BG_IMG_ZOOM_WIDTH  320
 #const BG_IMG_ZOOM_HEIGHT 240 ; ※ 75 = 100 / 640 * 480
@@ -453,9 +453,9 @@ msgothic_ = msgothic
 
 	; タイトル
 	game_title = "マンガ肉もぐもぐ"
-	font msgothic_, 48, 1
-	color 255, 255, 255 : pos 231, 31 : mes game_title
-	color               : pos 230, 30 : mes game_title
+	font msgothic_, 56, 1
+	color 255, 255, 255 : pos (640-8*56)/2+1, 26 : mes game_title
+	color               : pos (640-8*56)/2, 25 : mes game_title
 	
 	; ランキング
 	
@@ -481,7 +481,7 @@ msgothic_ = msgothic
 #const RANKING_FONT_STYLE 1
 	postfix = "stndrdth"
 	notesel ranking
-	font msgothic_, RANKING_FONT_SIZE, RANKING_FONT_STYLE
+	font msgothic_, RANKING_FONT_SIZE-2, RANKING_FONT_STYLE
 	repeat HSPTV_RANK_MAX : rank = cnt
 ;		pos limit((100 - ranking_frame) * 20, -1000, 0) - (100 <= ranking_frame) * (n - ranking_offset) * 20, (n - ranking_offset) * 20
 		n_ = rank - ranking_offset
@@ -489,13 +489,15 @@ msgothic_ = msgothic
 		if ranking_offset <= rank && rank < ranking_offset + 15 {
 			pos 0, 640 : mes score : mesx = ginfo_mesx
 			hsvcolor rank * 160 / HSPTV_RANK_MAX, 255, 255
+			;color 1
 			repeat 2
 				pos   1 - cnt,        y : mes strf("%2d%s", rank + 1, strmid(postfix, limit(rank \ 20, 0, 3) * 2, 2))
 				if ranking_score.rank {
-					pos  70 - cnt - mesx, y : mes strf("%3d個完食", ranking_score.rank)
-					pos 180 - cnt,        y : mes ranking_name.rank
+					pos  60 - cnt - mesx, y : mes strf("%3d個完食", ranking_score.rank)
+					pos 160 - cnt,        y : mes ranking_name.rank
 				}
 				color 1
+				;hsvcolor rank * 160 / HSPTV_RANK_MAX, 255, 255
 				y--
 			loop
 		}
@@ -503,8 +505,8 @@ msgothic_ = msgothic
 
 	gsel
 	gmode 2, 480, 480
-#const RANKING_POS_X 260;80
-#const RANKING_POS_Y 100;480 - 20 * 10 - 20
+#const RANKING_POS_X 240
+#const RANKING_POS_Y 100
 	pos RANKING_POS_X, RANKING_POS_Y
 	gcopy WID_BUFFER
 
@@ -576,13 +578,17 @@ msgothic_ = msgothic
  
 	redraw 0
 
+#const GAME_MAIN_MEET_XPOS  60 - BG_IMG_ZOOM_XPOS * 2
+#const GAME_MAIN_MEET_YPOS 120
+
 	; 肉の状態のチェックと供給
 	gsel WID_EAT_COUNT
 	if key & (ready * 256) : circle mx - EAT_SIZE, my - EAT_SIZE, mx + EAT_SIZE, my + EAT_SIZE
 	if eat_area_cur*100/eat_area_max < 1 || eat_area_max < 0 {
 		; 肉の供給 初回 or 残りが 1% 以下
 		boxf
-		pos 60, 120 : gcopy WID_BUFFER, 0, 48, 364, 364
+		pos GAME_MAIN_MEET_XPOS, GAME_MAIN_MEET_YPOS
+		gcopy WID_BUFFER, 0, 48, 364, 364
 		; カウントアップ
 		if 0 < eat_area_max {
 			my_eat_replay.my_eat = time_diff
@@ -610,19 +616,20 @@ msgothic_ = msgothic
   ; レイヤー 3
 
 	; 肉
-	pos 60, 120 : gcopy WID_EAT_COUNT, 60, 120, 364, 364
+	pos GAME_MAIN_MEET_XPOS, GAME_MAIN_MEET_YPOS
+	gcopy WID_EAT_COUNT, GAME_MAIN_MEET_XPOS, GAME_MAIN_MEET_YPOS, 364, 364
 
 	; 今の値
  	font msgothic_, 20, 1
  	color
-	pos 450, 400
+	pos 420, 400
 	mes strf("残り%2d.%d秒", time_limit / 1000, time_limit / 100 \ 10)
 	mes strf("%3d個完食", my_eat)
 	mes strf("%3d個目 残り%3d%%", my_eat + 1, eat_area_cur*100/eat_area_max)
 
- 	color 
+ 	;color 
 	repeat 2
-		pos 360 - cnt * 2, 5 - cnt * 2 : mes "実況"
+		pos 340 - cnt * 2, 5 - cnt * 2 : mes "実況 ----"
 	 	color 255, 255, 255
 	loop
  	color
@@ -648,7 +655,7 @@ msgothic_ = msgothic
 		; 実況
 		repeat 2 : cnt_ = cnt * 2
 			repeat 10
-				pos 370 - cnt_, 30 + cnt * 20 - cnt_
+				pos 330 - cnt_, 30 + cnt * 20 - cnt_
 				if ranking_eat(try_ranking_index.cnt) {
 					s = strf("%3d個目 %s", ranking_eat(try_ranking_index.cnt), ranking_name(try_ranking_index.cnt))
 					if 0 < cnt_ && HSPTV_RANK_MAX <= try_ranking_index.cnt { ; 今回のスコア
@@ -687,7 +694,7 @@ msgothic_ = msgothic
 			color
 			font msgothic_, 32, 1
 			repeat 2
-#const OPERATION_MSG_XPOS (640 - 10 * 32) / 2 - 80
+#const OPERATION_MSG_XPOS (640 - 10 * 32) / 2 - 120
 #const OPERATION_MSG_YPOS READYGO_MSG_YPOS + 96 + 20
 				pos OPERATION_MSG_XPOS - cnt * 2, OPERATION_MSG_YPOS - cnt * 2
 				mes "左クリックした状態で"
@@ -734,15 +741,18 @@ msgothic_ = msgothic
 	; タイムアップの文字を点滅させる
 	repeat 4
 		redraw 0
-		color 255, 160
 		pos 0, 0
 		gcopy WID_BG_BUFFER, 0, 0, 640, 480
 		if cnt \ 2 {
 			font msgothic_, 72, 1
 #const TIMEUP_MSG_XPOS (640 - 7 * 72) / 2
 #const TIMEUP_MSG_YPOS (480 - 72) / 2
-			pos TIMEUP_MSG_XPOS, TIMEUP_MSG_YPOS
-			mes "たいむあっぷ！"
+			color
+			repeat 2
+				pos TIMEUP_MSG_XPOS - cnt * 2, TIMEUP_MSG_YPOS - cnt * 2
+				mes "たいむあっぷ！"
+				color 255, 160
+			loop
 		}
 		redraw
 		wait 100
