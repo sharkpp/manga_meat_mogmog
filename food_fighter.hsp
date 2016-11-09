@@ -129,18 +129,18 @@ msgothic_ = msgothic
 #enum WID_TAMAFACE        ; 1024 x  512 tamaface.bmp読み込みバッファ
 #enum WID_BG_IMG          ;  640 x  480 sozai5.jpg読み込みバッファ
 #enum WID_TABLE_CLOTH_IMG ;  640 x  480 sozai6.jpg読み込みバッファ
-#enum WID_MEET_BUFFER     ; 1024 x 1024 肉拡大バッファ
+#enum WID_MEAT_BUFFER     ; 1024 x 1024 肉拡大バッファ
 #enum WID_DOT_GENERATED   ;  640 x  480 生成済み利用チップ画像
 #enum WID_BG_BUFFER       ;  640 x  480 背景バッファ
 #enum WID_EAT_COUNT       ;  640 x  480 もぐもぐ率カウント用
-#define WID_BUFFER WID_MEET_BUFFER
+#define WID_BUFFER WID_MEAT_BUFFER
 
 #const HSPTV_RANK_MAX_PLUS_ONE HSPTV_RANK_MAX + 1
 
 #const SCREEN_WIDTH  640
 #const SCREEN_HEIGHT 480
 
-#const MEET_ZOOM_SIZE 1024
+#const MEAT_ZOOM_SIZE 1024
 
 #const EAT_MAX 255 / 3 ; もぐもぐできる最大数、HSPTVのコメントのサイズに依存
 
@@ -180,8 +180,8 @@ msgothic_ = msgothic
 	; 利用画像(64x64のドット絵チップ画像)
 #const TAMADOT_TIPSIZE 64
 	; 肉ドット絵
-#const MEET_TIP_XPOS   TAMADOT_TIPSIZE * 5
-#const MEET_TIP_YPOS   TAMADOT_TIPSIZE * 5
+#const MEAT_TIP_XPOS   TAMADOT_TIPSIZE * 5
+#const MEAT_TIP_YPOS   TAMADOT_TIPSIZE * 5
 
 ; WID_TAMAFACE ------------------------------------
 ; 1024 x  512 tamaface.bmp読み込みバッファ
@@ -226,16 +226,16 @@ msgothic_ = msgothic
 #endif
 	picload hsptv_dir + "sozai6.jpg"     
 
-; WID_MEET_BUFFER --------------------------------
+; WID_MEAT_BUFFER --------------------------------
 ; 1024 x 1024 肉拡大バッファ
 
-	buffer WID_MEET_BUFFER, MEET_ZOOM_SIZE, MEET_ZOOM_SIZE
+	buffer WID_MEAT_BUFFER, MEAT_ZOOM_SIZE, MEAT_ZOOM_SIZE
 #ifdef DEBUG
-	title "WID_MEET_BUFFER"
+	title "WID_MEAT_BUFFER"
 #endif
 
 	; 64ドットを16倍拡大し1024ドットへ
-	gzoom MEET_ZOOM_SIZE, MEET_ZOOM_SIZE, WID_TAMADOT, MEET_TIP_XPOS, MEET_TIP_YPOS, TAMADOT_TIPSIZE, TAMADOT_TIPSIZE
+	gzoom MEAT_ZOOM_SIZE, MEAT_ZOOM_SIZE, WID_TAMADOT, MEAT_TIP_XPOS, MEAT_TIP_YPOS, TAMADOT_TIPSIZE, TAMADOT_TIPSIZE
 
 ; WID_DOT_GENERATED ------------------------------
 ;  640 x  480 生成済み利用チップ画像
@@ -250,34 +250,34 @@ msgothic_ = msgothic
 
 	; 肉画像生成
 
-#const MEET_ROTATED_SIZE      30 ;sqrt(2) * 64 / 2
-#const MEET_ROTATED_X_CENTER  32 - 9 ; 原寸合わせ (汗
-#const MEET_ROTATED_Y_CENTER  32 - 8 ; 原寸合わせ (汗
+#const MEAT_ROTATED_SIZE      30 ;sqrt(2) * 64 / 2
+#const MEAT_ROTATED_X_CENTER  32 - 9 ; 原寸合わせ (汗
+#const MEAT_ROTATED_Y_CENTER  32 - 8 ; 原寸合わせ (汗
 
-#const MEET_ROTATED_X1  cos180 * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_X_CENTER
-#const MEET_ROTATED_X2  cos270 * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_X_CENTER
-#const MEET_ROTATED_X3  cos0   * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_X_CENTER
-#const MEET_ROTATED_X4  cos90  * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_X_CENTER
-#const MEET_ROTATED_Y1  sin180 * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_Y_CENTER
-#const MEET_ROTATED_Y2  sin270 * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_Y_CENTER
-#const MEET_ROTATED_Y3  sin0   * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_Y_CENTER
-#const MEET_ROTATED_Y4  sin90  * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_Y_CENTER
+#const MEAT_ROTATED_X1  cos180 * MEAT_ROTATED_SIZE + 0.9 + MEAT_ROTATED_X_CENTER
+#const MEAT_ROTATED_X2  cos270 * MEAT_ROTATED_SIZE + 0.9 + MEAT_ROTATED_X_CENTER
+#const MEAT_ROTATED_X3  cos0   * MEAT_ROTATED_SIZE + 0.9 + MEAT_ROTATED_X_CENTER
+#const MEAT_ROTATED_X4  cos90  * MEAT_ROTATED_SIZE + 0.9 + MEAT_ROTATED_X_CENTER
+#const MEAT_ROTATED_Y1  sin180 * MEAT_ROTATED_SIZE + 0.9 + MEAT_ROTATED_Y_CENTER
+#const MEAT_ROTATED_Y2  sin270 * MEAT_ROTATED_SIZE + 0.9 + MEAT_ROTATED_Y_CENTER
+#const MEAT_ROTATED_Y3  sin0   * MEAT_ROTATED_SIZE + 0.9 + MEAT_ROTATED_Y_CENTER
+#const MEAT_ROTATED_Y4  sin90  * MEAT_ROTATED_SIZE + 0.9 + MEAT_ROTATED_Y_CENTER
 
-#define ctype MEET_ROTATE_X(%1) int( cos(M_PI*(%1)/180.0) * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_X_CENTER )
-#define ctype MEET_ROTATE_Y(%1) int( sin(M_PI*(%1)/180.0) * MEET_ROTATED_SIZE + 0.9 + MEET_ROTATED_Y_CENTER )
+#define ctype MEAT_ROTATE_X(%1) int( cos(M_PI*(%1)/180.0) * MEAT_ROTATED_SIZE + 0.9 + MEAT_ROTATED_X_CENTER )
+#define ctype MEAT_ROTATE_Y(%1) int( sin(M_PI*(%1)/180.0) * MEAT_ROTATED_SIZE + 0.9 + MEAT_ROTATED_Y_CENTER )
 
-;	dstx = MEET_ROTATED_X1, MEET_ROTATED_X2, MEET_ROTATED_X3, MEET_ROTATED_X4
-;	dsty = MEET_ROTATED_Y1, MEET_ROTATED_Y2, MEET_ROTATED_Y3, MEET_ROTATED_Y4
-;	dstx = MEET_ROTATE_X(180),MEET_ROTATE_X(270),MEET_ROTATE_X(0),MEET_ROTATE_X(90)
-;	dsty = MEET_ROTATE_Y(180),MEET_ROTATE_Y(270),MEET_ROTATE_Y(0),MEET_ROTATE_Y(90)
+;	dstx = MEAT_ROTATED_X1, MEAT_ROTATED_X2, MEAT_ROTATED_X3, MEAT_ROTATED_X4
+;	dsty = MEAT_ROTATED_Y1, MEAT_ROTATED_Y2, MEAT_ROTATED_Y3, MEAT_ROTATED_Y4
+;	dstx = MEAT_ROTATE_X(180),MEAT_ROTATE_X(270),MEAT_ROTATE_X(0),MEAT_ROTATE_X(90)
+;	dsty = MEAT_ROTATE_Y(180),MEAT_ROTATE_Y(270),MEAT_ROTATE_Y(0),MEAT_ROTATE_Y(90)
 	dstx = -6, 23, 53, 23
 	dsty = 24, -5, 24, 54
-	srcx =              0, MEET_ZOOM_SIZE, MEET_ZOOM_SIZE,              0
-	srcy =              0,              0, MEET_ZOOM_SIZE, MEET_ZOOM_SIZE
+	srcx =              0, MEAT_ZOOM_SIZE, MEAT_ZOOM_SIZE,              0
+	srcy =              0,              0, MEAT_ZOOM_SIZE, MEAT_ZOOM_SIZE
 
 	;color 255 : boxf 0,0,48,48
 	gmode 2
-	gsquare WID_MEET_BUFFER, dstx, dsty, srcx, srcy
+	gsquare WID_MEAT_BUFFER, dstx, dsty, srcx, srcy
 
 	; お皿(dish)
 
@@ -427,15 +427,15 @@ msgothic_ = msgothic
 	; 　ランキング ※アニメーション
 
 	; 　肉 ※アニメーション
-	meet_zoom = (gettime(7) < 500) * 16
-	tip_size = 192 + meet_zoom
+	meat_zoom = (gettime(7) < 500) * 16
+	tip_size = 192 + meat_zoom
 	gsel WID_BUFFER
 	gmode 2
 	color : boxf
 	pos   0, 48 : gzoom tip_size, tip_size, WID_DOT_GENERATED, 0, 0, 48, 48
 	pos 256, 48 : gcopy WID_BUFFER, 0, 48, tip_size, tip_size
 	gsel
-	pos 26-meet_zoom/2, 280-meet_zoom/2 : gcopy WID_BUFFER, 256, 48, tip_size, tip_size
+	pos 26-meat_zoom/2, 280-meat_zoom/2 : gcopy WID_BUFFER, 256, 48, tip_size, tip_size
 
 	; 操作説明
 	font msgothic_, 24, 1
@@ -536,7 +536,7 @@ msgothic_ = msgothic
 	gsel
 
 	dim ranking_eat, HSPTV_RANK_MAX_PLUS_ONE
-	dim eat_meet, HSPTV_RANK_MAX
+	dim eat_meat, HSPTV_RANK_MAX
 	dim my_eat_replay, 128
 	let0 my_eat
 
@@ -573,8 +573,8 @@ msgothic_ = msgothic
  
 	redraw 0
 
-#const GAME_MAIN_MEET_XPOS  60 - BG_IMG_ZOOM_XPOS * 2
-#const GAME_MAIN_MEET_YPOS 120
+#const GAME_MAIN_MEAT_XPOS  60 - BG_IMG_ZOOM_XPOS * 2
+#const GAME_MAIN_MEAT_YPOS 120
 
 	EAT_SIZE_R = EAT_SIZE - time_cur / 100 \10
 
@@ -584,7 +584,7 @@ msgothic_ = msgothic
 	if eat_area_cur*100/eat_area_max < 1 || eat_area_max < 0 {
 		; 肉の供給 初回 or 残りが 1% 以下
 		boxf
-		pos GAME_MAIN_MEET_XPOS, GAME_MAIN_MEET_YPOS
+		pos GAME_MAIN_MEAT_XPOS, GAME_MAIN_MEAT_YPOS
 		gcopy WID_BUFFER, 0, 48, 364, 364
 		; カウントアップ
 		if 0 < eat_area_max {
@@ -613,8 +613,8 @@ msgothic_ = msgothic
   ; レイヤー 3
 
 	; 肉
-	pos GAME_MAIN_MEET_XPOS, GAME_MAIN_MEET_YPOS
-	gcopy WID_EAT_COUNT, GAME_MAIN_MEET_XPOS, GAME_MAIN_MEET_YPOS, 364, 364
+	pos GAME_MAIN_MEAT_XPOS, GAME_MAIN_MEAT_YPOS
+	gcopy WID_EAT_COUNT, GAME_MAIN_MEAT_XPOS, GAME_MAIN_MEAT_YPOS, 364, 364
 
 	; 今の値
  	font msgothic_, 20, 1
@@ -706,7 +706,7 @@ msgothic_ = msgothic
 	color 255
 	font msgothic_, 12
 	repeat HSPTV_RANK_MAX
-		pos 0, 12*cnt : mes strf("%2d: %3d", cnt + 1, eat_meet.cnt)
+		pos 0, 12*cnt : mes strf("%2d: %3d", cnt + 1, eat_meat.cnt)
 	loop
 	mes strf("%5d ms eat=%3d", time_diff, my_eat)
 	mes strf("%3d.%02d", eat_area_cur*100/eat_area_max, eat_area_cur*10000/eat_area_max\100)
