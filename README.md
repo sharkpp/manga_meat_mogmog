@@ -1,6 +1,6 @@
 # マンガ肉もぐもぐ
 
-HSPプログラムコンテスト2016 応募作品 [#1274](http://dev.onionsoft.net/seed/info.ax?id=1274)
+[HSPプログラムコンテスト 2016](http://hsp.tv/contest2016/) 応募作品 [#1274](http://dev.onionsoft.net/seed/info.ax?id=1274)
 
 「(有)テクノキット賞」入賞
 
@@ -37,7 +37,7 @@ HSPプログラムコンテスト作品ページ [マンガ肉もぐもぐ](http
 この作品は「HSPTVブラウザ」で配信されています。
 
 「HSPTVブラウザ」についてやダウンロードなどについては、
-HSP公式ページの [HSPTVの紹介](http://hsp.tv/play/hsptv_br.html) からどうぞ。
+HSP公式ページの [HSPTVの紹介](http://hsp.tv/play/hsptv_br.html) からお願いします。
 
 ## ソースコードを利用する
 
